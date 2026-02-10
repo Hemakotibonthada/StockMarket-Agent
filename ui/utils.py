@@ -31,21 +31,22 @@ DARK_COLORS = {
     "primary": "#6366F1",        # Indigo
     "primary_light": "#818CF8",
     "secondary": "#EC4899",      # Pink
-    "success": "#10B981",        # Emerald
-    "danger": "#EF4444",         # Red
-    "warning": "#F59E0B",        # Amber
-    "info": "#3B82F6",           # Blue
+    "success": "#34D399",        # Emerald-400 (brighter for dark bg)
+    "danger": "#F87171",         # Red-400 (brighter for dark bg)
+    "warning": "#FBBF24",        # Amber-400 (brighter for dark bg)
+    "info": "#60A5FA",           # Blue-400 (brighter for dark bg)
     "bg_dark": "#0F172A",        # Slate-900
     "bg_card": "#1E293B",        # Slate-800
     "bg_card_alt": "#253048",    # Gradient destination
-    "text": "#F8FAFC",           # Slate-50
-    "text_muted": "#94A3B8",     # Slate-400
-    "text_secondary": "#CBD5E1", # Slate-300
-    "text_dim": "#64748B",       # Slate-500
+    "text": "#F8FAFC",           # Slate-50 – primary text
+    "text_muted": "#CBD5E1",     # Slate-300 – readable muted (was Slate-400)
+    "text_secondary": "#E2E8F0", # Slate-200 – high-contrast secondary (was Slate-300)
+    "text_dim": "#94A3B8",       # Slate-400 – dim but still readable (was Slate-500)
+    "text_bold": "#FFFFFF",      # Pure white for bold/emphasis text
     "grid": "#334155",           # Slate-700
-    "profit": "#10B981",
-    "loss": "#EF4444",
-    "neutral": "#6B7280",
+    "profit": "#34D399",         # Emerald-400
+    "loss": "#F87171",           # Red-400
+    "neutral": "#9CA3AF",        # Gray-400 (brighter)
     "plotly_template": "plotly_dark",
     "nav_hover": "#1E293B",
     "sidebar_bg": "#1E293B",
@@ -58,16 +59,17 @@ LIGHT_COLORS = {
     "secondary": "#DB2777",      # Pink-600
     "success": "#059669",        # Emerald-600
     "danger": "#DC2626",         # Red-600
-    "warning": "#D97706",        # Amber-600
+    "warning": "#B45309",        # Amber-700 (darker for white bg readability)
     "info": "#2563EB",           # Blue-600
     "bg_dark": "#F8FAFC",        # Slate-50
     "bg_card": "#FFFFFF",        # White
     "bg_card_alt": "#F1F5F9",    # Slate-100
-    "text": "#0F172A",           # Slate-900
-    "text_muted": "#64748B",     # Slate-500
-    "text_secondary": "#475569", # Slate-600
-    "text_dim": "#94A3B8",       # Slate-400
-    "grid": "#E2E8F0",           # Slate-200
+    "text": "#0F172A",           # Slate-900 – primary text
+    "text_muted": "#475569",     # Slate-600 – readable muted (was Slate-500)
+    "text_secondary": "#334155", # Slate-700 – high-contrast secondary (was Slate-600)
+    "text_dim": "#64748B",       # Slate-500 – dim but readable (was Slate-400)
+    "text_bold": "#0F172A",      # Slate-900 for bold/emphasis text
+    "grid": "#CBD5E1",           # Slate-300 (was Slate-200, stronger lines)
     "profit": "#059669",
     "loss": "#DC2626",
     "neutral": "#6B7280",
@@ -404,7 +406,7 @@ def create_monthly_returns_heatmap(
         zmid=0,
         text=np.round(pivot_table.values, 2),
         texttemplate="%{text:.1f}%",
-        textfont={"size": 11},
+        textfont={"size": 11, "color": COLORS["text"]},
     ))
 
     fig.update_layout(
@@ -522,18 +524,22 @@ def get_custom_css() -> str:
     """Generate theme-aware CSS using current COLORS values."""
     return f"""
 <style>
-    /* Main background */
+    /* ═══════ Main background ═══════ */
     .stApp {{
         background-color: {COLORS["bg_dark"]};
+        color: {COLORS["text"]};
     }}
 
-    /* Sidebar */
+    /* ═══════ Sidebar ═══════ */
     [data-testid="stSidebar"] {{
         background-color: {COLORS["sidebar_bg"]};
         border-right: 1px solid {COLORS["sidebar_border"]};
     }}
+    [data-testid="stSidebar"] * {{
+        color: {COLORS["text_secondary"]};
+    }}
 
-    /* Metric cards */
+    /* ═══════ Metric cards ═══════ */
     [data-testid="stMetric"] {{
         background-color: {COLORS["bg_card"]};
         border: 1px solid {COLORS["grid"]};
@@ -554,17 +560,39 @@ def get_custom_css() -> str:
         font-size: 0.9rem !important;
     }}
 
-    /* Headers */
-    h1, h2, h3 {{
+    /* ═══════ Headers ═══════ */
+    h1, h2, h3, h4, h5, h6 {{
         color: {COLORS["text"]} !important;
     }}
 
-    /* Paragraph text */
-    p, span, label, .stMarkdown {{
+    /* ═══════ All text defaults ═══════ */
+    p, span, label, .stMarkdown, .stMarkdown p, .stMarkdown li {{
         color: {COLORS["text_secondary"]};
     }}
 
-    /* Tabs */
+    /* ═══════ Bold / strong text ═══════ */
+    strong, b, .stMarkdown strong, .stMarkdown b {{
+        color: {COLORS["text_bold"]} !important;
+        font-weight: 700;
+    }}
+
+    /* ═══════ Inline code ═══════ */
+    code, .stMarkdown code {{
+        color: {COLORS["primary_light"]} !important;
+        background-color: {COLORS["bg_card"]} !important;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }}
+
+    /* ═══════ Links ═══════ */
+    a {{
+        color: {COLORS["primary_light"]} !important;
+    }}
+    a:hover {{
+        color: {COLORS["primary"]} !important;
+    }}
+
+    /* ═══════ Tabs ═══════ */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
     }}
@@ -581,23 +609,39 @@ def get_custom_css() -> str:
         border-color: {COLORS["primary"]} !important;
     }}
 
-    /* Cards / containers */
+    /* ═══════ Expanders ═══════ */
     [data-testid="stExpander"] {{
         background-color: {COLORS["bg_card"]};
         border: 1px solid {COLORS["grid"]};
         border-radius: 12px;
     }}
+    [data-testid="stExpander"] summary {{
+        color: {COLORS["text"]} !important;
+        font-weight: 600;
+    }}
+    [data-testid="stExpander"] summary span {{
+        color: {COLORS["text"]} !important;
+    }}
+    [data-testid="stExpander"] .stMarkdown p,
+    [data-testid="stExpander"] .stMarkdown li,
+    [data-testid="stExpander"] p {{
+        color: {COLORS["text_secondary"]} !important;
+    }}
+    [data-testid="stExpander"] strong,
+    [data-testid="stExpander"] b {{
+        color: {COLORS["text_bold"]} !important;
+    }}
 
-    /* Dataframes */
+    /* ═══════ Dataframes ═══════ */
     [data-testid="stDataFrame"] {{
         border-radius: 8px;
         overflow: hidden;
     }}
 
-    /* Buttons */
+    /* ═══════ Buttons ═══════ */
     .stButton > button {{
         background: linear-gradient(135deg, {COLORS["primary"]}, {COLORS["primary_light"]});
-        color: white;
+        color: white !important;
         border: none;
         border-radius: 8px;
         padding: 8px 24px;
@@ -607,18 +651,38 @@ def get_custom_css() -> str:
     .stButton > button:hover {{
         background: linear-gradient(135deg, {COLORS["primary_light"]}, {COLORS["primary"]});
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        color: white !important;
     }}
 
-    /* Selectbox / inputs */
+    /* ═══════ Download buttons ═══════ */
+    .stDownloadButton > button {{
+        background: {COLORS["bg_card"]} !important;
+        color: {COLORS["text"]} !important;
+        border: 1px solid {COLORS["grid"]} !important;
+        border-radius: 8px;
+        font-weight: 600;
+    }}
+    .stDownloadButton > button:hover {{
+        background: {COLORS["bg_card_alt"]} !important;
+        border-color: {COLORS["primary"]} !important;
+        color: {COLORS["text"]} !important;
+    }}
+
+    /* ═══════ Labels, inputs, selects ═══════ */
     [data-testid="stSelectbox"] label,
     [data-testid="stNumberInput"] label,
     [data-testid="stSlider"] label,
     [data-testid="stTextInput"] label,
-    [data-testid="stTextArea"] label {{
+    [data-testid="stTextArea"] label,
+    [data-testid="stFileUploader"] label,
+    [data-testid="stMultiSelect"] label,
+    [data-testid="stDateInput"] label,
+    [data-testid="stTimeInput"] label {{
         color: {COLORS["text_secondary"]} !important;
+        font-weight: 500;
     }}
 
-    /* Input fields */
+    /* ═══════ Input fields ═══════ */
     [data-testid="stTextInput"] input,
     [data-testid="stNumberInput"] input,
     [data-testid="stSelectbox"] [data-baseweb="select"] {{
@@ -626,38 +690,98 @@ def get_custom_css() -> str:
         color: {COLORS["text"]} !important;
         border-color: {COLORS["grid"]} !important;
     }}
-
-    /* Slider */
-    .stSlider [data-testid="stThumbValue"] {{
+    [data-testid="stSelectbox"] [data-baseweb="select"] span {{
         color: {COLORS["text"]} !important;
     }}
 
-    /* Checkbox */
-    .stCheckbox label span {{
+    /* ═══════ Slider ═══════ */
+    .stSlider [data-testid="stThumbValue"] {{
+        color: {COLORS["text"]} !important;
+    }}
+    .stSlider label div {{
         color: {COLORS["text_secondary"]} !important;
     }}
 
-    /* Toggle */
+    /* ═══════ Checkbox & radio ═══════ */
+    .stCheckbox label span {{
+        color: {COLORS["text_secondary"]} !important;
+    }}
+    .stRadio label span,
+    .stRadio label {{
+        color: {COLORS["text_secondary"]} !important;
+    }}
+
+    /* ═══════ Toggle ═══════ */
     [data-testid="stToggle"] label span {{
         color: {COLORS["text_secondary"]} !important;
     }}
 
-    /* Divider */
+    /* ═══════ Divider ═══════ */
     hr {{
         border-color: {COLORS["grid"]} !important;
     }}
 
-    /* Success/Error/Info/Warning boxes */
+    /* ═══════ Alerts (success/error/info/warning) ═══════ */
     [data-testid="stAlert"] {{
         border-radius: 8px;
     }}
-
-    /* Multiselect tags */
-    [data-baseweb="tag"] {{
-        background-color: {COLORS["primary"]} !important;
+    [data-testid="stAlert"] p {{
+        color: inherit !important;
     }}
 
-    /* Hide Streamlit branding */
+    /* ═══════ Multiselect tags ═══════ */
+    [data-baseweb="tag"] {{
+        background-color: {COLORS["primary"]} !important;
+        color: #FFFFFF !important;
+    }}
+    [data-baseweb="tag"] span {{
+        color: #FFFFFF !important;
+    }}
+
+    /* ═══════ Tooltip / help text ═══════ */
+    [data-testid="stTooltipIcon"] {{
+        color: {COLORS["text_dim"]} !important;
+    }}
+
+    /* ═══════ File uploader ═══════ */
+    [data-testid="stFileUploader"] section {{
+        background-color: {COLORS["bg_card"]} !important;
+        border-color: {COLORS["grid"]} !important;
+    }}
+    [data-testid="stFileUploader"] section span {{
+        color: {COLORS["text_muted"]} !important;
+    }}
+
+    /* ═══════ Progress bar text ═══════ */
+    .stProgress > div > div > div {{
+        background-color: {COLORS["primary"]};
+    }}
+
+    /* ═══════ Spinner text ═══════ */
+    .stSpinner > div {{
+        color: {COLORS["text_muted"]} !important;
+    }}
+
+    /* ═══════ Column headers in markdown ═══════ */
+    .stMarkdown h3, .stMarkdown h4 {{
+        color: {COLORS["text"]} !important;
+    }}
+
+    /* ═══════ List items ═══════ */
+    .stMarkdown ul li, .stMarkdown ol li {{
+        color: {COLORS["text_secondary"]};
+    }}
+    .stMarkdown ul li strong, .stMarkdown ol li strong {{
+        color: {COLORS["text_bold"]} !important;
+    }}
+
+    /* ═══════ Plotly subplot titles ═══════ */
+    .js-plotly-plot .plotly .g-gtitle,
+    .js-plotly-plot .plotly .annotation-text {{
+        fill: {COLORS["text"]} !important;
+    }}
+
+    /* ═══════ Hide Streamlit branding ═══════ */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}

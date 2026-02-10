@@ -137,13 +137,18 @@ def render():
                         max(100 - m.max_drawdown_pct * 3, 0),
                     ]
                     color = colors_list[i % len(colors_list)]
+                    # Convert hex to rgba for fill
+                    def _hex_to_rgba(hex_color, alpha=0.1):
+                        hex_color = hex_color.lstrip("#")
+                        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+                        return f"rgba({r},{g},{b},{alpha})"
+
                     fig_radar.add_trace(go.Scatterpolar(
                         r=vals + [vals[0]],
                         theta=categories + [categories[0]],
                         fill="toself",
                         name=name,
-                        fillcolor=color.replace(")", ", 0.1)").replace("rgb", "rgba")
-                                        if "rgb" in color else f"{color}1A",
+                        fillcolor=_hex_to_rgba(color, 0.15),
                         line=dict(color=color, width=2),
                     ))
 
@@ -151,8 +156,10 @@ def render():
                     polar=dict(
                         bgcolor=COLORS["bg_dark"],
                         radialaxis=dict(visible=True, range=[0, 100],
-                                        gridcolor=COLORS["grid"]),
-                        angularaxis=dict(gridcolor=COLORS["grid"]),
+                                        gridcolor=COLORS["grid"],
+                                        tickfont=dict(color=COLORS["text_muted"])),
+                        angularaxis=dict(gridcolor=COLORS["grid"],
+                                         tickfont=dict(color=COLORS["text_secondary"])),
                     ),
                     template=COLORS["plotly_template"], height=450,
                     paper_bgcolor=COLORS["bg_dark"],

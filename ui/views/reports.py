@@ -338,8 +338,8 @@ def render():
             from ui.pdf_report import _generate_sample_news
             sample_news = _generate_sample_news()
             for item in sample_news:
-                sentiment_color = {"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#F59E0B"}.get(item.sentiment, COLORS["text_muted"])
-                impact_color = {"High": "#EF4444", "Medium": "#F59E0B", "Low": "#10B981"}.get(item.impact, COLORS["text_muted"])
+                sentiment_color = {"Positive": COLORS["success"], "Negative": COLORS["danger"], "Neutral": COLORS["warning"]}.get(item.sentiment, COLORS["text_muted"])
+                impact_color = {"High": COLORS["danger"], "Medium": COLORS["warning"], "Low": COLORS["success"]}.get(item.impact, COLORS["text_muted"])
                 st.markdown(
                     f'<div style="background: {COLORS["bg_card"]}; border-left: 3px solid {sentiment_color}; '
                     f'padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 10px;">'
@@ -549,10 +549,10 @@ def render():
                 )
         else:
             st.markdown(
-                f'<div style="text-align: center; padding: 40px; color: {COLORS["text_dim"]};">'
+                f'<div style="text-align: center; padding: 40px; color: {COLORS["text_muted"]};">'
                 '<p style="font-size: 2rem;">📋</p>'
-                '<p>No reports generated yet in this session.</p>'
-                '<p style="font-size: 0.85rem;">Go to the "Generate Report" tab to create your first report.</p>'
+                f'<p style="color: {COLORS["text_secondary"]};">No reports generated yet in this session.</p>'
+                f'<p style="font-size: 0.85rem; color: {COLORS["text_muted"]};">Go to the "Generate Report" tab to create your first report.</p>'
                 '</div>',
                 unsafe_allow_html=True,
             )

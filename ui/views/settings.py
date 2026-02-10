@@ -87,11 +87,20 @@ def render():
             with col:
                 hex_color = preview_colors[key]
                 border = f"2px solid {preview_colors['grid']}"
+                # Use contrasting text: dark text on light swatches, light text on dark swatches
+                is_light_swatch = key in ("bg_dark", "bg_card", "text") and selected_theme == "light"
+                is_text_swatch = key == "text"
+                if is_text_swatch:
+                    swatch_text_color = preview_colors["bg_dark"]  # inverse for readability
+                elif is_light_swatch:
+                    swatch_text_color = "#0F172A"
+                else:
+                    swatch_text_color = "#FFFFFF"
                 st.markdown(
                     f'<div style="background: {hex_color}; border: {border}; '
                     f'border-radius: 8px; height: 60px; display: flex; '
                     f'align-items: center; justify-content: center;">'
-                    f'<span style="color: {"#000" if key in ("bg_dark", "bg_card", "text") and selected_theme == "light" else "#FFF"}; '
+                    f'<span style="color: {swatch_text_color}; '
                     f'font-size: 0.75rem; font-weight: 600;">{label}<br/>{hex_color}</span></div>',
                     unsafe_allow_html=True,
                 )

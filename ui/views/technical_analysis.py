@@ -313,7 +313,7 @@ def render():
             import plotly.express as px
             fig_corr = px.imshow(
                 corr, text_auto=".2f",
-                color_continuous_scale=["#EF4444", "#1E293B", "#10B981"],
+                color_continuous_scale=[COLORS["danger"], COLORS["bg_card"], COLORS["success"]],
                 aspect="auto",
             )
             fig_corr.update_layout(
@@ -321,6 +321,7 @@ def render():
                 template=COLORS["plotly_template"],
                 paper_bgcolor=COLORS["bg_dark"],
                 plot_bgcolor=COLORS["bg_dark"],
+                font=dict(color=COLORS["text"]),
             )
             st.plotly_chart(fig_corr, width='stretch')
         else:

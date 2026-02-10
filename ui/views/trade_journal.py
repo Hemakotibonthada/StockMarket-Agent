@@ -157,6 +157,7 @@ def render():
             xaxis_title="Net P&L (₹)", yaxis_title="Count",
             template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
+            font=dict(color=COLORS["text"]),
         )
         st.plotly_chart(fig_hist, width='stretch')
 
@@ -173,6 +174,7 @@ def render():
             xaxis_title="Return %", yaxis_title="Count",
             template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
+            font=dict(color=COLORS["text"]),
         )
         st.plotly_chart(fig_ret, width='stretch')
 
@@ -205,6 +207,7 @@ def render():
             yaxis_title="Streak Length",
             template=COLORS["plotly_template"], height=350,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
+            font=dict(color=COLORS["text"]),
         )
         st.plotly_chart(fig_streak, width='stretch')
 
@@ -238,6 +241,7 @@ def render():
             yaxis_title="Net P&L (₹)",
             template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
+            font=dict(color=COLORS["text"]),
         )
         st.plotly_chart(fig_hold, width='stretch')
 

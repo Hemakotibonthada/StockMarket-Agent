@@ -131,14 +131,16 @@ def render():
     for i, (sym, df) in enumerate(multi_data.items()):
         with spark_cols[i]:
             recent = df.tail(30)
-            color = COLORS["success"] if recent["close"].iloc[-1] > recent["close"].iloc[0] else COLORS["danger"]
+            is_positive = recent["close"].iloc[-1] > recent["close"].iloc[0]
+            color = COLORS["success"] if is_positive else COLORS["danger"]
+            fill_color = "rgba(52,211,153,0.1)" if is_positive else "rgba(248,113,113,0.1)"
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 y=recent["close"].values,
                 mode="lines",
                 line=dict(color=color, width=2),
                 fill="tozeroy",
-                fillcolor=color.replace(")", ", 0.1)").replace("rgb", "rgba") if "rgb" in color else f"rgba(16,185,129,0.1)" if color == COLORS["success"] else "rgba(239,68,68,0.1)",
+                fillcolor=fill_color,
             ))
             fig.update_layout(
                 height=100, margin=dict(l=0, r=0, t=0, b=0),
