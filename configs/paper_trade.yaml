@@ -1,0 +1,30 @@
+inherits: "base.yaml"
+
+strategy: "mean_reversion"
+strategy_params:
+  zscore_window: 20
+  zscore_entry: 2.0
+  zscore_exit: 0.5
+  rsi_period: 14
+  rsi_oversold: 30
+  rsi_overbought: 70
+  max_positions: 5
+
+broker: "paper"
+
+risk:
+  risk_per_trade_pct: 0.5
+  daily_max_loss_pct: 1.0
+  weekly_max_loss_pct: 2.0
+  strategy_max_dd_pct: 5.0
+  initial_capital: 1000000
+
+tripwires:
+  max_consecutive_rejects: 3
+  max_latency_ms: 2000
+  max_drawdown_pct: 5.0
+  feed_timeout_seconds: 60
+
+logging:
+  audit_file: "./logs/paper_audit.jsonl"
+  level: "INFO"

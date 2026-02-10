@@ -1,0 +1,10 @@
+data_dir: "./data"
+timezone: "Asia/Kolkata"
+db: "duckdb"
+universe_file: "./configs/universe_nifty50.yaml"
+bar_interval: "5min"
+seed: 42
+log_level: "INFO"
+log_dir: "./logs"
+models_dir: "./models_registry"
+reports_dir: "./reports"

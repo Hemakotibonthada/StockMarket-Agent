@@ -1,0 +1,36 @@
+inherits: "base.yaml"
+
+strategy: "orb_momentum"
+strategy_params:
+  orb_window_minutes: 15
+  atr_period: 14
+  atr_multiplier: 1.5
+  time_stop_minutes: 180
+  max_positions: 5
+
+broker: "zerodha"
+confirm_live: false  # Must be overridden via CLI --confirm-live true
+
+risk:
+  risk_per_trade_pct: 0.3
+  daily_max_loss_pct: 0.75
+  weekly_max_loss_pct: 1.5
+  strategy_max_dd_pct: 3.0
+  initial_capital: 1000000
+
+tripwires:
+  max_consecutive_rejects: 3
+  max_latency_ms: 1000
+  max_drawdown_pct: 3.0
+  feed_timeout_seconds: 30
+
+order_router:
+  max_orders_per_second: 5
+  max_orders_per_minute: 50
+  price_protection_pct: 1.0
+  max_retries: 3
+  retry_delay_ms: 500
+
+logging:
+  audit_file: "./logs/live_audit.jsonl"
+  level: "INFO"

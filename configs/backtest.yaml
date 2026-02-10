@@ -1,0 +1,37 @@
+inherits: "base.yaml"
+
+strategy: "orb_momentum"
+strategy_params:
+  orb_window_minutes: 15
+  atr_period: 14
+  atr_multiplier: 1.5
+  time_stop_minutes: 180
+  max_positions: 5
+
+costs:
+  brokerage_bps: 5
+  stt_bps: 10
+  gst_bps: 1.8
+  stamp_bps: 0.003
+  sebi_bps: 0.0001
+
+slippage:
+  mode: "random"
+  bps_mean: 4
+  bps_std: 3
+
+walkforward:
+  train_years: [2018, 2019, 2020]
+  validate_years: [2021]
+  test_years: [2022, 2023]
+
+risk:
+  risk_per_trade_pct: 0.5
+  daily_max_loss_pct: 1.0
+  weekly_max_loss_pct: 2.0
+  strategy_max_dd_pct: 5.0
+  initial_capital: 1000000
+
+report:
+  format: "html"
+  output_dir: "./reports"

@@ -1,0 +1,29 @@
+name: "NIFTY 50 Universe"
+description: "Large-cap liquid symbols for backtesting and trading"
+
+symbols:
+  - RELIANCE
+  - TCS
+  - HDFCBANK
+  - INFY
+  - ICICIBANK
+  - HINDUNILVR
+  - ITC
+  - SBIN
+  - BHARTIARTL
+  - KOTAKBANK
+  - LT
+  - AXISBANK
+  - ASIANPAINT
+  - MARUTI
+  - HCLTECH
+  - SUNPHARMA
+  - TATAMOTORS
+  - WIPRO
+  - ULTRACEMCO
+  - TITAN
+
+filters:
+  min_avg_volume: 500000
+  min_price: 50
+  max_price: 50000
