@@ -328,10 +328,10 @@ def render():
             with chart_c1:
                 dd = compute_drawdown(result.equity_curve)
                 fig_eq = create_equity_curve(result.equity_curve, dd, height=350)
-                st.plotly_chart(fig_eq, width="stretch")
+                st.plotly_chart(fig_eq, width="stretch", key="pnl_equity")
             with chart_c2:
                 fig_pnl = create_cumulative_pnl(result.trades, height=350)
-                st.plotly_chart(fig_pnl, width="stretch")
+                st.plotly_chart(fig_pnl, width="stretch", key="pnl_cumulative")
 
         # Section 5: News
         with st.expander("📰 Section 5: Top Market News", expanded=False):
@@ -362,18 +362,18 @@ def render():
             with ch_col1:
                 rets = compute_returns(result.equity_curve)
                 fig_dist = create_returns_distribution(rets, height=350)
-                st.plotly_chart(fig_dist, width="stretch")
+                st.plotly_chart(fig_dist, width="stretch", key="sec6_dist")
             with ch_col2:
                 fig_hm = create_monthly_returns_heatmap(result.equity_curve, height=350)
-                st.plotly_chart(fig_hm, width="stretch")
+                st.plotly_chart(fig_hm, width="stretch", key="sec6_heatmap")
 
             sc_col1, sc_col2 = st.columns(2)
             with sc_col1:
                 fig_sc = create_trade_scatter(result.trades, height=350)
-                st.plotly_chart(fig_sc, width="stretch")
+                st.plotly_chart(fig_sc, width="stretch", key="sec6_scatter")
             with sc_col2:
                 fig_cum = create_cumulative_pnl(result.trades, height=350)
-                st.plotly_chart(fig_cum, width="stretch")
+                st.plotly_chart(fig_cum, width="stretch", key="sec6_cumulative")
 
         # Section 7: Metrics
         with st.expander("📋 Section 7: Complete Metrics", expanded=False):

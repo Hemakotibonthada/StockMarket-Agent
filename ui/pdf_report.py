@@ -714,7 +714,7 @@ def generate_pdf_report(data: ReportData) -> bytes:
         pdf.body_text("No trades to display.")
 
     # ── Generate output ────────────────────────────────────────────────────
-    return pdf.output()
+    return bytes(pdf.output())
 
 
 # ── Convenience: build ReportData from BacktestResult ──────────────────────────
