@@ -21,14 +21,86 @@ from src.core.config import (
 def render():
     st.markdown("## ⚙️ Settings")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         'Configure application defaults and preferences</p>',
         unsafe_allow_html=True,
     )
 
-    tab_general, tab_costs, tab_risk, tab_data, tab_about = st.tabs([
-        "🔧 General", "💰 Costs & Slippage", "🛡️ Risk Defaults", "📁 Data", "ℹ️ About",
+    tab_theme, tab_general, tab_costs, tab_risk, tab_data, tab_about = st.tabs([
+        "🎨 Theme", "🔧 General", "💰 Costs & Slippage", "🛡️ Risk Defaults", "📁 Data", "ℹ️ About",
     ])
+
+    # ═══════════════════════════════════════════════════════════════════════
+    #  Theme Settings
+    # ═══════════════════════════════════════════════════════════════════════
+    with tab_theme:
+        st.markdown("### 🎨 Appearance")
+        st.markdown(
+            f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
+            "Choose your preferred theme. Changes take effect immediately.</p>",
+            unsafe_allow_html=True,
+        )
+
+        current_theme = st.session_state.get("app_theme", "system")
+
+        theme_options = {
+            "system": "🖥️ System (Auto-detect)",
+            "dark": "🌙 Dark",
+            "light": "☀️ Light",
+        }
+
+        theme_index = list(theme_options.keys()).index(current_theme) if current_theme in theme_options else 0
+
+        selected_theme = st.radio(
+            "Theme",
+            options=list(theme_options.keys()),
+            format_func=lambda x: theme_options[x],
+            index=theme_index,
+            key="theme_radio",
+            horizontal=True,
+        )
+
+        if selected_theme != current_theme:
+            st.session_state["app_theme"] = selected_theme
+            # Reset system detection if switching away from system
+            if selected_theme != "system" and "system_theme_resolved" in st.session_state:
+                del st.session_state["system_theme_resolved"]
+            st.rerun()
+
+        # Theme preview
+        st.markdown("---")
+        st.markdown("#### Preview")
+
+        from ui.utils import DARK_COLORS, LIGHT_COLORS
+        preview_colors = DARK_COLORS if (selected_theme == "dark" or
+                         (selected_theme == "system" and
+                          st.session_state.get("system_theme_resolved", "dark") == "dark")) else LIGHT_COLORS
+
+        prev_cols = st.columns(4)
+        preview_items = [
+            ("Background", "bg_dark"),
+            ("Cards", "bg_card"),
+            ("Text", "text"),
+            ("Primary", "primary"),
+        ]
+        for col, (label, key) in zip(prev_cols, preview_items):
+            with col:
+                hex_color = preview_colors[key]
+                border = f"2px solid {preview_colors['grid']}"
+                st.markdown(
+                    f'<div style="background: {hex_color}; border: {border}; '
+                    f'border-radius: 8px; height: 60px; display: flex; '
+                    f'align-items: center; justify-content: center;">'
+                    f'<span style="color: {"#000" if key in ("bg_dark", "bg_card", "text") and selected_theme == "light" else "#FFF"}; '
+                    f'font-size: 0.75rem; font-weight: 600;">{label}<br/>{hex_color}</span></div>',
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown("")
+        st.info(
+            "**System** mode detects your OS dark/light preference on first load. "
+            "**Dark** and **Light** force a specific theme regardless of OS settings."
+        )
 
     # ═══════════════════════════════════════════════════════════════════════
     #  General Settings
@@ -204,7 +276,7 @@ def render():
         st.markdown(
             f"""
             <div style="
-                background: linear-gradient(135deg, {COLORS['bg_card']}, #253048);
+                background: linear-gradient(135deg, {COLORS['bg_card']}, {COLORS['bg_card_alt']});
                 border: 1px solid {COLORS['grid']};
                 border-radius: 16px;
                 padding: 40px;
@@ -212,7 +284,7 @@ def render():
                 margin: 20px 0;
             ">
                 <h1 style="
-                    background: linear-gradient(135deg, #6366F1, #EC4899);
+                    background: linear-gradient(135deg, {COLORS['primary']}, {COLORS['secondary']});
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                     font-size: 2.5rem;

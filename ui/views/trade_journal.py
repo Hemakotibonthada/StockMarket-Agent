@@ -23,7 +23,7 @@ from ui.utils import (
 def render():
     st.markdown("## 📒 Trade Journal")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         'Detailed trade log with filtering and export</p>',
         unsafe_allow_html=True,
     )
@@ -155,7 +155,7 @@ def render():
         fig_hist.update_layout(
             title="P&L Distribution",
             xaxis_title="Net P&L (₹)", yaxis_title="Count",
-            template="plotly_dark", height=400,
+            template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
         )
         st.plotly_chart(fig_hist, width='stretch')
@@ -171,7 +171,7 @@ def render():
         fig_ret.update_layout(
             title="Return % Distribution",
             xaxis_title="Return %", yaxis_title="Count",
-            template="plotly_dark", height=400,
+            template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
         )
         st.plotly_chart(fig_ret, width='stretch')
@@ -203,7 +203,7 @@ def render():
         fig_streak.update_layout(
             title="Win/Loss Streaks",
             yaxis_title="Streak Length",
-            template="plotly_dark", height=350,
+            template=COLORS["plotly_template"], height=350,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
         )
         st.plotly_chart(fig_streak, width='stretch')
@@ -236,7 +236,7 @@ def render():
             title="P&L vs Holding Period",
             xaxis_title="Holding Bars",
             yaxis_title="Net P&L (₹)",
-            template="plotly_dark", height=400,
+            template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
         )
         st.plotly_chart(fig_hold, width='stretch')

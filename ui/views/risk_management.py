@@ -27,7 +27,7 @@ from src.backtest.metrics import compute_returns, compute_drawdown
 def render():
     st.markdown("## 🛡️ Risk Management")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         'Position sizing calculators, risk limits, and portfolio risk analytics</p>',
         unsafe_allow_html=True,
     )
@@ -91,7 +91,7 @@ def render():
             st.markdown(
                 f"""
                 <div style="
-                    background: linear-gradient(135deg, {COLORS['bg_card']}, #253048);
+                    background: linear-gradient(135deg, {COLORS['bg_card']}, {COLORS['bg_card_alt']});
                     border: 1px solid {COLORS['primary']};
                     border-radius: 16px;
                     padding: 32px;
@@ -156,7 +156,7 @@ def render():
         fig_compare.update_layout(
             title="Position Size by Method (shares)",
             yaxis_title="Shares",
-            template="plotly_dark", height=350,
+            template=COLORS["plotly_template"], height=350,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
@@ -270,7 +270,7 @@ def render():
         fig_var.update_layout(
             title="Value at Risk & Expected Shortfall",
             xaxis_title="Daily Return (%)",
-            template="plotly_dark", height=400,
+            template=COLORS["plotly_template"], height=400,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
@@ -288,7 +288,7 @@ def render():
         fig_dd.update_layout(
             title="Drawdown Underwater Chart",
             yaxis_title="Drawdown %",
-            template="plotly_dark", height=350,
+            template=COLORS["plotly_template"], height=350,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
@@ -317,7 +317,7 @@ def render():
         fig_rolling.add_hline(y=0, line_dash="solid", line_color=COLORS["text_muted"], row=2, col=1, opacity=0.3)
 
         fig_rolling.update_layout(
-            height=500, template="plotly_dark", showlegend=False,
+            height=500, template=COLORS["plotly_template"], showlegend=False,
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
@@ -384,7 +384,7 @@ def render():
                     fig_mc.update_layout(
                         title=f"Monte Carlo Equity Paths ({n_sims} simulations)",
                         yaxis_title="Portfolio Value (₹)",
-                        template="plotly_dark", height=500,
+                        template=COLORS["plotly_template"], height=500,
                         paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                         font=dict(color=COLORS["text"]),
                     )
@@ -399,7 +399,7 @@ def render():
                     fig_final.update_layout(
                         title="Final Portfolio Value Distribution",
                         xaxis_title="Final Value (₹)",
-                        template="plotly_dark", height=350,
+                        template=COLORS["plotly_template"], height=350,
                         paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                         font=dict(color=COLORS["text"]),
                     )

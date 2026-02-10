@@ -27,23 +27,69 @@ from src.risk.sizing import atr_position_size, fixed_fraction_size, kelly_fracti
 from src.risk.limits import RiskLimiter
 
 # ── Color palette ──────────────────────────────────────────────────────────────
-COLORS = {
-    "primary": "#6366F1",       # Indigo
+DARK_COLORS = {
+    "primary": "#6366F1",        # Indigo
     "primary_light": "#818CF8",
-    "secondary": "#EC4899",     # Pink
-    "success": "#10B981",       # Emerald
-    "danger": "#EF4444",        # Red
-    "warning": "#F59E0B",       # Amber
-    "info": "#3B82F6",          # Blue
-    "bg_dark": "#0F172A",       # Slate-900
-    "bg_card": "#1E293B",       # Slate-800
-    "text": "#F8FAFC",          # Slate-50
-    "text_muted": "#94A3B8",    # Slate-400
-    "grid": "#334155",          # Slate-700
+    "secondary": "#EC4899",      # Pink
+    "success": "#10B981",        # Emerald
+    "danger": "#EF4444",         # Red
+    "warning": "#F59E0B",        # Amber
+    "info": "#3B82F6",           # Blue
+    "bg_dark": "#0F172A",        # Slate-900
+    "bg_card": "#1E293B",        # Slate-800
+    "bg_card_alt": "#253048",    # Gradient destination
+    "text": "#F8FAFC",           # Slate-50
+    "text_muted": "#94A3B8",     # Slate-400
+    "text_secondary": "#CBD5E1", # Slate-300
+    "text_dim": "#64748B",       # Slate-500
+    "grid": "#334155",           # Slate-700
     "profit": "#10B981",
     "loss": "#EF4444",
     "neutral": "#6B7280",
+    "plotly_template": "plotly_dark",
+    "nav_hover": "#1E293B",
+    "sidebar_bg": "#1E293B",
+    "sidebar_border": "#334155",
 }
+
+LIGHT_COLORS = {
+    "primary": "#4F46E5",        # Indigo-600
+    "primary_light": "#6366F1",
+    "secondary": "#DB2777",      # Pink-600
+    "success": "#059669",        # Emerald-600
+    "danger": "#DC2626",         # Red-600
+    "warning": "#D97706",        # Amber-600
+    "info": "#2563EB",           # Blue-600
+    "bg_dark": "#F8FAFC",        # Slate-50
+    "bg_card": "#FFFFFF",        # White
+    "bg_card_alt": "#F1F5F9",    # Slate-100
+    "text": "#0F172A",           # Slate-900
+    "text_muted": "#64748B",     # Slate-500
+    "text_secondary": "#475569", # Slate-600
+    "text_dim": "#94A3B8",       # Slate-400
+    "grid": "#E2E8F0",           # Slate-200
+    "profit": "#059669",
+    "loss": "#DC2626",
+    "neutral": "#6B7280",
+    "plotly_template": "plotly_white",
+    "nav_hover": "#F1F5F9",
+    "sidebar_bg": "#FFFFFF",
+    "sidebar_border": "#E2E8F0",
+}
+
+# Mutable dict – updated in-place by apply_theme()
+COLORS = dict(DARK_COLORS)
+
+
+def apply_theme(theme: str = "dark") -> None:
+    """Update COLORS dict in-place to match the requested theme.
+
+    Since every module that does ``from ui.utils import COLORS`` holds a
+    reference to the *same* dict object, mutating it here propagates
+    automatically to all pages.
+    """
+    source = LIGHT_COLORS if theme == "light" else DARK_COLORS
+    COLORS.update(source)
 
 STRATEGY_MAP = {
     "Mean Reversion": {
@@ -225,7 +271,7 @@ def create_candlestick_chart(
 
     fig.update_layout(
         title=title,
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=height,
         xaxis_rangeslider_visible=False,
         showlegend=False,
@@ -278,7 +324,7 @@ def create_equity_curve(
 
     fig.update_layout(
         title=title,
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=height,
         paper_bgcolor=COLORS["bg_dark"],
         plot_bgcolor=COLORS["bg_dark"],
@@ -313,7 +359,7 @@ def create_returns_distribution(
         title=title,
         xaxis_title="Return (%)",
         yaxis_title="Frequency",
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=height,
         paper_bgcolor=COLORS["bg_dark"],
         plot_bgcolor=COLORS["bg_dark"],
@@ -336,7 +382,7 @@ def create_monthly_returns_heatmap(
     monthly = rets.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
     if len(monthly) == 0:
         fig = go.Figure()
-        fig.update_layout(title=title, template="plotly_dark", height=height,
+        fig.update_layout(title=title, template=COLORS["plotly_template"], height=height,
                           paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"])
         return fig
 
@@ -363,7 +409,7 @@ def create_monthly_returns_heatmap(
 
     fig.update_layout(
         title=title,
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=height,
         paper_bgcolor=COLORS["bg_dark"],
         plot_bgcolor=COLORS["bg_dark"],
@@ -380,7 +426,7 @@ def create_trade_scatter(
     """Scatter plot of trade P&L."""
     if not trades:
         fig = go.Figure()
-        fig.update_layout(title=title, template="plotly_dark", height=height,
+        fig.update_layout(title=title, template=COLORS["plotly_template"], height=height,
                           paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"])
         return fig
 
@@ -403,7 +449,7 @@ def create_trade_scatter(
         title=title,
         xaxis_title="Trade #",
         yaxis_title="Net P&L (₹)",
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=height,
         paper_bgcolor=COLORS["bg_dark"],
         plot_bgcolor=COLORS["bg_dark"],
@@ -420,7 +466,7 @@ def create_cumulative_pnl(
     """Cumulative P&L line chart."""
     if not trades:
         fig = go.Figure()
-        fig.update_layout(title=title, template="plotly_dark", height=height)
+        fig.update_layout(title=title, template=COLORS["plotly_template"], height=height)
         return fig
 
     cum_pnl = np.cumsum([t.net_pnl for t in trades])
@@ -440,7 +486,7 @@ def create_cumulative_pnl(
         title=title,
         xaxis_title="Trade #",
         yaxis_title="Cumulative P&L (₹)",
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=height,
         paper_bgcolor=COLORS["bg_dark"],
         plot_bgcolor=COLORS["bg_dark"],
@@ -472,112 +518,159 @@ def trades_to_dataframe(trades: list[Trade]) -> pd.DataFrame:
 
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
 
-CUSTOM_CSS = """
+def get_custom_css() -> str:
+    """Generate theme-aware CSS using current COLORS values."""
+    return f"""
 <style>
     /* Main background */
-    .stApp {
-        background-color: #0F172A;
-    }
+    .stApp {{
+        background-color: {COLORS["bg_dark"]};
+    }}
 
     /* Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #1E293B;
-        border-right: 1px solid #334155;
-    }
+    [data-testid="stSidebar"] {{
+        background-color: {COLORS["sidebar_bg"]};
+        border-right: 1px solid {COLORS["sidebar_border"]};
+    }}
 
     /* Metric cards */
-    [data-testid="stMetric"] {
-        background-color: #1E293B;
-        border: 1px solid #334155;
+    [data-testid="stMetric"] {{
+        background-color: {COLORS["bg_card"]};
+        border: 1px solid {COLORS["grid"]};
         border-radius: 12px;
         padding: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    }
-    [data-testid="stMetricLabel"] {
-        color: #94A3B8 !important;
+    }}
+    [data-testid="stMetricLabel"] {{
+        color: {COLORS["text_muted"]} !important;
         font-size: 0.85rem !important;
-    }
-    [data-testid="stMetricValue"] {
-        color: #F8FAFC !important;
+    }}
+    [data-testid="stMetricValue"] {{
+        color: {COLORS["text"]} !important;
         font-size: 1.8rem !important;
         font-weight: 700 !important;
-    }
-    [data-testid="stMetricDelta"] > div {
+    }}
+    [data-testid="stMetricDelta"] > div {{
         font-size: 0.9rem !important;
-    }
+    }}
 
     /* Headers */
-    h1, h2, h3 {
-        color: #F8FAFC !important;
-    }
+    h1, h2, h3 {{
+        color: {COLORS["text"]} !important;
+    }}
+
+    /* Paragraph text */
+    p, span, label, .stMarkdown {{
+        color: {COLORS["text_secondary"]};
+    }}
 
     /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
+    .stTabs [data-baseweb="tab-list"] {{
         gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #1E293B;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        background-color: {COLORS["bg_card"]};
         border-radius: 8px;
-        color: #94A3B8;
-        border: 1px solid #334155;
+        color: {COLORS["text_muted"]};
+        border: 1px solid {COLORS["grid"]};
         padding: 8px 16px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #6366F1 !important;
-        color: #F8FAFC !important;
-        border-color: #6366F1 !important;
-    }
+    }}
+    .stTabs [aria-selected="true"] {{
+        background-color: {COLORS["primary"]} !important;
+        color: #FFFFFF !important;
+        border-color: {COLORS["primary"]} !important;
+    }}
 
     /* Cards / containers */
-    [data-testid="stExpander"] {
-        background-color: #1E293B;
-        border: 1px solid #334155;
+    [data-testid="stExpander"] {{
+        background-color: {COLORS["bg_card"]};
+        border: 1px solid {COLORS["grid"]};
         border-radius: 12px;
-    }
+    }}
 
     /* Dataframes */
-    [data-testid="stDataFrame"] {
+    [data-testid="stDataFrame"] {{
         border-radius: 8px;
         overflow: hidden;
-    }
+    }}
 
     /* Buttons */
-    .stButton > button {
-        background: linear-gradient(135deg, #6366F1, #818CF8);
+    .stButton > button {{
+        background: linear-gradient(135deg, {COLORS["primary"]}, {COLORS["primary_light"]});
         color: white;
         border: none;
         border-radius: 8px;
         padding: 8px 24px;
         font-weight: 600;
         transition: all 0.2s;
-    }
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #4F46E5, #6366F1);
+    }}
+    .stButton > button:hover {{
+        background: linear-gradient(135deg, {COLORS["primary_light"]}, {COLORS["primary"]});
         box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-    }
+    }}
 
     /* Selectbox / inputs */
     [data-testid="stSelectbox"] label,
     [data-testid="stNumberInput"] label,
-    [data-testid="stSlider"] label {
-        color: #CBD5E1 !important;
-    }
+    [data-testid="stSlider"] label,
+    [data-testid="stTextInput"] label,
+    [data-testid="stTextArea"] label {{
+        color: {COLORS["text_secondary"]} !important;
+    }}
+
+    /* Input fields */
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stSelectbox"] [data-baseweb="select"] {{
+        background-color: {COLORS["bg_card"]} !important;
+        color: {COLORS["text"]} !important;
+        border-color: {COLORS["grid"]} !important;
+    }}
+
+    /* Slider */
+    .stSlider [data-testid="stThumbValue"] {{
+        color: {COLORS["text"]} !important;
+    }}
+
+    /* Checkbox */
+    .stCheckbox label span {{
+        color: {COLORS["text_secondary"]} !important;
+    }}
+
+    /* Toggle */
+    [data-testid="stToggle"] label span {{
+        color: {COLORS["text_secondary"]} !important;
+    }}
 
     /* Divider */
-    hr {
-        border-color: #334155 !important;
-    }
+    hr {{
+        border-color: {COLORS["grid"]} !important;
+    }}
+
+    /* Success/Error/Info/Warning boxes */
+    [data-testid="stAlert"] {{
+        border-radius: 8px;
+    }}
+
+    /* Multiselect tags */
+    [data-baseweb="tag"] {{
+        background-color: {COLORS["primary"]} !important;
+    }}
 
     /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
 </style>
 """
 
 
+# Keep backward compatibility – static string alias pointing to dark theme CSS
+CUSTOM_CSS = get_custom_css()
+
+
 def metric_card_html(label: str, value: str, delta: str = "", delta_color: str = "normal") -> str:
-    """Generate styled metric card HTML."""
+    """Generate styled metric card HTML using theme-aware COLORS."""
     delta_style = ""
     if delta:
         color = COLORS["success"] if delta_color == "normal" else COLORS["danger"]
@@ -585,7 +678,7 @@ def metric_card_html(label: str, value: str, delta: str = "", delta_color: str =
 
     return f"""
     <div style="
-        background: linear-gradient(135deg, {COLORS['bg_card']}, #253048);
+        background: linear-gradient(135deg, {COLORS['bg_card']}, {COLORS['bg_card_alt']});
         border: 1px solid {COLORS['grid']};
         border-radius: 12px;
         padding: 20px;

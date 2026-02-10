@@ -26,7 +26,7 @@ from src.backtest.metrics import compute_returns, compute_drawdown
 def render():
     st.markdown("## ▶️ Backtest Runner")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         'Configure and run backtests with full strategy customization</p>',
         unsafe_allow_html=True,
     )

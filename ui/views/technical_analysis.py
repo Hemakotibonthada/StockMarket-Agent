@@ -28,7 +28,7 @@ from src.features.indicators import (
 def render():
     st.markdown("## 📈 Technical Analysis")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         'Interactive price charts with overlays and technical indicators</p>',
         unsafe_allow_html=True,
     )
@@ -273,7 +273,7 @@ def render():
     chart_height = 500 + len(sub_panels) * 150
     fig.update_layout(
         title=f"{custom_symbol} — Technical Analysis",
-        template="plotly_dark",
+        template=COLORS["plotly_template"],
         height=chart_height,
         xaxis_rangeslider_visible=False,
         paper_bgcolor=COLORS["bg_dark"],
@@ -318,7 +318,7 @@ def render():
             )
             fig_corr.update_layout(
                 height=500,
-                template="plotly_dark",
+                template=COLORS["plotly_template"],
                 paper_bgcolor=COLORS["bg_dark"],
                 plot_bgcolor=COLORS["bg_dark"],
             )

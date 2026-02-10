@@ -27,7 +27,7 @@ from src.backtest.metrics import compute_returns, compute_drawdown
 def render():
     st.markdown("## 📊 Dashboard")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">Portfolio overview and market snapshot</p>',
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">Portfolio overview and market snapshot</p>',
         unsafe_allow_html=True,
     )
 
@@ -106,7 +106,7 @@ def render():
             st.markdown(
                 f"""
                 <div style="
-                    background: linear-gradient(135deg, {COLORS['bg_card']}, #253048);
+                    background: linear-gradient(135deg, {COLORS['bg_card']}, {COLORS['bg_card_alt']});
                     border: 1px solid {COLORS['grid']};
                     border-radius: 12px;
                     padding: 16px;

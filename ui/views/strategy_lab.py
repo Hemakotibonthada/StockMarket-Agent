@@ -24,7 +24,7 @@ from src.backtest.metrics import compute_returns, compute_drawdown
 def render():
     st.markdown("## ⚡ Strategy Lab")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         'Compare strategies, optimize parameters, and validate robustness</p>',
         unsafe_allow_html=True,
     )
@@ -94,7 +94,7 @@ def render():
             fig_eq.update_layout(
                 title="Equity Curve Comparison",
                 yaxis_title="Portfolio Value (₹)",
-                template="plotly_dark", height=500,
+                template=COLORS["plotly_template"], height=500,
                 paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                 font=dict(color=COLORS["text"]),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02),
@@ -154,7 +154,7 @@ def render():
                                         gridcolor=COLORS["grid"]),
                         angularaxis=dict(gridcolor=COLORS["grid"]),
                     ),
-                    template="plotly_dark", height=450,
+                    template=COLORS["plotly_template"], height=450,
                     paper_bgcolor=COLORS["bg_dark"],
                     font=dict(color=COLORS["text"]),
                 )
@@ -247,7 +247,7 @@ def render():
                                         marker_color=COLORS["success"]), row=2, col=2)
 
             fig_sweep.update_layout(
-                height=600, template="plotly_dark", showlegend=False,
+                height=600, template=COLORS["plotly_template"], showlegend=False,
                 paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                 font=dict(color=COLORS["text"]),
             )
@@ -330,7 +330,7 @@ def render():
             fig_wf.update_layout(
                 title="Equity Curves by Period",
                 yaxis_title="Portfolio Value (₹)",
-                template="plotly_dark", height=450,
+                template=COLORS["plotly_template"], height=450,
                 paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                 font=dict(color=COLORS["text"]),
             )

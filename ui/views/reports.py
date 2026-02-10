@@ -39,7 +39,7 @@ def _ensure_backtest_result():
 def render():
     st.markdown("## 📊 Reports & Daily Digest")
     st.markdown(
-        '<p style="color: #94A3B8; margin-top: -10px;">'
+        f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
         "Generate comprehensive PDF reports with agent learnings, portfolio analysis, "
         "P&L, news, and performance charts. Schedule end-of-day emails or generate on demand.</p>",
         unsafe_allow_html=True,
@@ -94,7 +94,7 @@ def render():
         # Custom news input (optional)
         with st.expander("📰 Custom News Headlines (Optional)"):
             st.markdown(
-                '<p style="color: #94A3B8; font-size: 0.85rem;">'
+                f'<p style="color: {COLORS["text_muted"]}; font-size: 0.85rem;">'
                 "Add custom news items to include in the report. Leave empty to use sample market news.</p>",
                 unsafe_allow_html=True,
             )
@@ -201,7 +201,7 @@ def render():
     with tab_preview:
         st.markdown("### 👁️ Report Section Preview")
         st.markdown(
-            '<p style="color: #94A3B8; font-size: 0.85rem;">'
+            f'<p style="color: {COLORS["text_muted"]}; font-size: 0.85rem;">'
             "Preview each section that will be included in the PDF report.</p>",
             unsafe_allow_html=True,
         )
@@ -338,20 +338,20 @@ def render():
             from ui.pdf_report import _generate_sample_news
             sample_news = _generate_sample_news()
             for item in sample_news:
-                sentiment_color = {"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#F59E0B"}.get(item.sentiment, "#94A3B8")
-                impact_color = {"High": "#EF4444", "Medium": "#F59E0B", "Low": "#10B981"}.get(item.impact, "#94A3B8")
+                sentiment_color = {"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#F59E0B"}.get(item.sentiment, COLORS["text_muted"])
+                impact_color = {"High": "#EF4444", "Medium": "#F59E0B", "Low": "#10B981"}.get(item.impact, COLORS["text_muted"])
                 st.markdown(
-                    f'<div style="background: #1E293B; border-left: 3px solid {sentiment_color}; '
+                    f'<div style="background: {COLORS["bg_card"]}; border-left: 3px solid {sentiment_color}; '
                     f'padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 10px;">'
-                    f'<div style="font-weight: 600; color: #F8FAFC; font-size: 0.95rem;">{item.headline}</div>'
+                    f'<div style="font-weight: 600; color: {COLORS["text"]}; font-size: 0.95rem;">{item.headline}</div>'
                     f'<div style="margin-top: 4px;">'
                     f'<span style="background: {sentiment_color}; color: white; padding: 2px 8px; '
                     f'border-radius: 4px; font-size: 0.7rem; font-weight: 600;">{item.sentiment}</span>'
                     f'&nbsp;<span style="background: {impact_color}; color: white; padding: 2px 8px; '
                     f'border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Impact: {item.impact}</span>'
                     f'</div>'
-                    f'<div style="color: #94A3B8; font-size: 0.85rem; margin-top: 6px;">{item.summary}</div>'
-                    f'<div style="color: #64748B; font-size: 0.75rem; margin-top: 4px;">Source: {item.source}</div>'
+                    f'<div style="color: {COLORS["text_muted"]}; font-size: 0.85rem; margin-top: 6px;">{item.summary}</div>'
+                    f'<div style="color: {COLORS["text_dim"]}; font-size: 0.75rem; margin-top: 4px;">Source: {item.source}</div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
@@ -393,7 +393,7 @@ def render():
     with tab_email:
         st.markdown("### 📧 Email Report Configuration")
         st.markdown(
-            '<p style="color: #94A3B8; font-size: 0.85rem;">'
+            f'<p style="color: {COLORS["text_muted"]}; font-size: 0.85rem;">'
             "Configure automatic end-of-day report delivery or manually send reports.</p>",
             unsafe_allow_html=True,
         )
@@ -549,7 +549,7 @@ def render():
                 )
         else:
             st.markdown(
-                '<div style="text-align: center; padding: 40px; color: #64748B;">'
+                f'<div style="text-align: center; padding: 40px; color: {COLORS["text_dim"]};">'
                 '<p style="font-size: 2rem;">📋</p>'
                 '<p>No reports generated yet in this session.</p>'
                 '<p style="font-size: 0.85rem;">Go to the "Generate Report" tab to create your first report.</p>'
