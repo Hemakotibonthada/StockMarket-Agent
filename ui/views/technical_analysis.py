@@ -1,4 +1,4 @@
-"""Technical Analysis page – interactive charting with multiple indicators."""
+"""Technical Analysis page – interactive charting with real NSE market data."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from ui.utils import (
-    COLORS, generate_synthetic_data, load_sample_data, compute_base_features,
-    create_candlestick_chart,
+    COLORS, load_real_data, compute_base_features,
+    create_candlestick_chart, INDIAN_STOCKS,
 )
 from src.features.indicators import (
     atr, rsi, zscore, vwap, bollinger_bands, ema, macd,
@@ -34,15 +34,28 @@ def render():
     )
 
     # ── Data source ────────────────────────────────────────────────────────
-    col_src, col_sym, col_bars = st.columns([2, 1, 1])
+    col_src, col_sym, col_period = st.columns([2, 2, 1])
     with col_src:
         source = st.selectbox("Data Source", [
-            "Synthetic Data", "Sample: RELIANCE", "Sample: TCS", "Upload CSV",
+            "Live NSE Data", "Upload CSV",
         ], key="ta_source")
     with col_sym:
-        custom_symbol = st.text_input("Symbol Label", "RELIANCE", key="ta_sym")
-    with col_bars:
-        n_bars = st.slider("Bars", 60, 2000, 500, 20, key="ta_bars")
+        if source == "Live NSE Data":
+            symbol_options = sorted(INDIAN_STOCKS.keys())
+            selected_symbol = st.selectbox(
+                "Stock Symbol",
+                symbol_options,
+                index=symbol_options.index("RELIANCE") if "RELIANCE" in symbol_options else 0,
+                format_func=lambda s: f"{s} — {INDIAN_STOCKS[s]}",
+                key="ta_symbol",
+            )
+        else:
+            selected_symbol = st.text_input("Symbol Label", "STOCK", key="ta_sym_label")
+    with col_period:
+        if source == "Live NSE Data":
+            period = st.selectbox("Period", ["3mo", "6mo", "1y", "2y", "5y"], index=2, key="ta_period")
+        else:
+            period = "1y"
 
     uploaded = None
     if source == "Upload CSV":
@@ -51,14 +64,15 @@ def render():
     # Load data
     if source == "Upload CSV" and uploaded:
         df = pd.read_csv(uploaded, parse_dates=["date"])
-    elif source == "Sample: RELIANCE":
-        df = load_sample_data("RELIANCE")
-    elif source == "Sample: TCS":
-        df = load_sample_data("TCS")
     else:
-        df = generate_synthetic_data(symbol=custom_symbol, n_bars=n_bars, seed=42)
+        df = load_real_data(selected_symbol, period=period, interval="1d")
+
+    if df.empty:
+        st.error(f"No data available for {selected_symbol}. Please try another stock.")
+        return
 
     date_col = "date" if "date" in df.columns else "datetime"
+    display_symbol = selected_symbol if source == "Live NSE Data" else selected_symbol
 
     # ── Indicator selection ────────────────────────────────────────────────
     st.markdown("---")
@@ -68,31 +82,31 @@ def render():
 
     with overlay_col:
         st.markdown("**Price Overlays**")
-        show_sma = st.checkbox("SMA (Simple Moving Average)", True)
+        show_sma = st.checkbox("SMA (Simple Moving Average)", True, key="ta_sma")
         sma_period = st.slider("SMA Period", 5, 100, 20, key="sma_p") if show_sma else 20
-        show_ema_line = st.checkbox("EMA (Exponential Moving Average)", False)
+        show_ema_line = st.checkbox("EMA (Exponential Moving Average)", False, key="ta_ema")
         ema_period = st.slider("EMA Span", 5, 100, 20, key="ema_p") if show_ema_line else 20
-        show_bb = st.checkbox("Bollinger Bands", True)
+        show_bb = st.checkbox("Bollinger Bands", True, key="ta_bb")
         bb_period = st.slider("BB Period", 5, 50, 20, key="bb_p") if show_bb else 20
         bb_std = st.slider("BB Std Dev", 1.0, 3.5, 2.0, 0.1, key="bb_s") if show_bb else 2.0
-        show_vwap_line = st.checkbox("VWAP", False)
+        show_vwap_line = st.checkbox("VWAP", False, key="ta_vwap")
 
     with sub_col:
         st.markdown("**Sub-indicators**")
-        show_rsi = st.checkbox("RSI", True)
+        show_rsi = st.checkbox("RSI", True, key="ta_rsi")
         rsi_period = st.slider("RSI Period", 5, 30, 14, key="rsi_p") if show_rsi else 14
-        show_macd = st.checkbox("MACD", True)
-        show_volume = st.checkbox("Volume", True)
-        show_atr = st.checkbox("ATR", False)
+        show_macd = st.checkbox("MACD", True, key="ta_macd")
+        show_volume = st.checkbox("Volume", True, key="ta_vol")
+        show_atr = st.checkbox("ATR", False, key="ta_atr")
         atr_period = st.slider("ATR Period", 5, 30, 14, key="atr_p") if show_atr else 14
-        show_obv = st.checkbox("OBV", False)
+        show_obv = st.checkbox("OBV", False, key="ta_obv")
 
     with params_col:
         st.markdown("**Analysis**")
-        show_zscore = st.checkbox("Z-Score", False)
+        show_zscore = st.checkbox("Z-Score", False, key="ta_zs")
         zscore_window = st.slider("Z-Score Window", 5, 60, 20, key="zs_w") if show_zscore else 20
-        show_rvol = st.checkbox("Realized Volatility", False)
-        show_roc = st.checkbox("Rate of Change", False)
+        show_rvol = st.checkbox("Realized Volatility", False, key="ta_rvol")
+        show_roc = st.checkbox("Rate of Change", False, key="ta_roc")
         roc_period = st.slider("ROC Period", 5, 30, 10, key="roc_p") if show_roc else 10
 
     # ── Build chart ────────────────────────────────────────────────────────
@@ -272,7 +286,7 @@ def render():
     # Layout
     chart_height = 500 + len(sub_panels) * 150
     fig.update_layout(
-        title=f"{custom_symbol} — Technical Analysis",
+        title=f"{display_symbol} — Technical Analysis",
         template=COLORS["plotly_template"],
         height=chart_height,
         xaxis_rangeslider_visible=False,
@@ -282,7 +296,7 @@ def render():
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, width='stretch', key="ta_main_chart")
 
     # ── Price Statistics ───────────────────────────────────────────────────
     st.markdown("### 📊 Price Statistics")
@@ -291,7 +305,7 @@ def render():
         st.metric("Current Price", f"₹{df['close'].iloc[-1]:,.2f}")
     with stat_c2:
         range_pct = (df["high"].max() - df["low"].min()) / df["low"].min() * 100
-        st.metric("52W Range", f"{range_pct:.1f}%")
+        st.metric("Price Range", f"{range_pct:.1f}%")
     with stat_c3:
         avg_vol = df["volume"].mean()
         st.metric("Avg Volume", f"{avg_vol:,.0f}")
@@ -323,6 +337,6 @@ def render():
                 plot_bgcolor=COLORS["bg_dark"],
                 font=dict(color=COLORS["text"]),
             )
-            st.plotly_chart(fig_corr, width='stretch')
+            st.plotly_chart(fig_corr, width='stretch', key="ta_corr_chart")
         else:
             st.info("Not enough numeric feature columns for a correlation matrix.")

@@ -14,10 +14,11 @@ import numpy as np
 from datetime import datetime
 
 from ui.utils import (
-    COLORS, generate_synthetic_data, run_backtest_from_ui,
+    COLORS, load_real_data, run_backtest_from_ui,
     create_equity_curve, create_returns_distribution,
     create_monthly_returns_heatmap, create_trade_scatter,
     create_cumulative_pnl, trades_to_dataframe,
+    INDIAN_STOCKS,
 )
 from ui.pdf_report import (
     generate_pdf_report, build_report_data_from_backtest,
@@ -28,12 +29,16 @@ from src.backtest.metrics import compute_returns, compute_drawdown
 
 
 def _ensure_backtest_result():
-    """Ensure a backtest result exists in session state."""
+    """Ensure a backtest result exists — use real market data."""
     if "backtest_result" not in st.session_state:
-        df = generate_synthetic_data(n_bars=500, seed=42)
+        df = load_real_data("RELIANCE", period="1y", interval="1d")
+        if df.empty:
+            st.error("Could not fetch market data. Please run a backtest first.")
+            return False
         result = run_backtest_from_ui(df, "Mean Reversion", {"zscore_entry": 2.0, "zscore_exit": 0.5})
         st.session_state["backtest_result"] = result
-        st.session_state["backtest_config"] = {"strategy": "Mean Reversion", "capital": 1_000_000}
+        st.session_state["backtest_config"] = {"strategy": "Mean Reversion", "capital": 1_000_000, "symbol": "RELIANCE"}
+    return True
 
 
 def render():
@@ -45,7 +50,9 @@ def render():
         unsafe_allow_html=True,
     )
 
-    _ensure_backtest_result()
+    if not _ensure_backtest_result():
+        return
+
     result = st.session_state["backtest_result"]
     config_info = st.session_state.get("backtest_config", {"strategy": "N/A", "capital": 1_000_000})
     metrics = result.metrics
@@ -247,11 +254,15 @@ def render():
             day_pnl = result.trades[-1].net_pnl if result.trades else 0
             day_pnl_pct = (day_pnl / final_eq * 100) if final_eq else 0
 
+            # Compute invested vs cash from actual trade positions
+            invested = sum(t.quantity * t.entry_price for t in result.trades[-5:]) if result.trades else 0
+            cash_balance = max(final_eq - invested, 0)
+
             p_col1, p_col2, p_col3, p_col4 = st.columns(4)
             with p_col1:
                 st.metric("Portfolio Value", f"₹{final_eq:,.0f}")
             with p_col2:
-                st.metric("Cash Balance", f"₹{final_eq * 0.3:,.0f}")
+                st.metric("Cash Balance", f"₹{cash_balance:,.0f}")
             with p_col3:
                 st.metric("Day P&L", f"₹{day_pnl:+,.0f}", f"{day_pnl_pct:+.2f}%")
             with p_col4:
@@ -334,7 +345,12 @@ def render():
                 st.plotly_chart(fig_pnl, width="stretch", key="pnl_cumulative")
 
         # Section 5: News
-        with st.expander("📰 Section 5: Top Market News", expanded=False):
+        with st.expander("📰 Section 5: Market News", expanded=False):
+            st.markdown(
+                f'<p style="color: {COLORS["text_muted"]}; font-size: 0.85rem;">'
+                "Add custom news headlines in the Generate Report tab, or these sample headlines will be used.</p>",
+                unsafe_allow_html=True,
+            )
             from ui.pdf_report import _generate_sample_news
             sample_news = _generate_sample_news()
             for item in sample_news:

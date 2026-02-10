@@ -15,13 +15,25 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from ui.utils import (
-    COLORS, generate_synthetic_data, run_backtest_from_ui,
-    create_equity_curve,
+    COLORS, load_real_data, run_backtest_from_ui,
+    create_equity_curve, INDIAN_STOCKS,
 )
 from src.risk.sizing import atr_position_size, fixed_fraction_size, kelly_fraction, variance_position_size
 from src.risk.limits import RiskLimiter, RiskState
 from src.core.config import RiskConfig
 from src.backtest.metrics import compute_returns, compute_drawdown
+
+
+def _ensure_backtest_result():
+    """Ensure a backtest result exists — use real market data if needed."""
+    if "backtest_result" not in st.session_state:
+        df = load_real_data("RELIANCE", period="1y", interval="1d")
+        if df.empty:
+            return None
+        result = run_backtest_from_ui(df, "Mean Reversion", {"zscore_entry": 2.0, "zscore_exit": 0.5})
+        st.session_state["backtest_result"] = result
+        st.session_state["backtest_config"] = {"strategy": "Mean Reversion", "capital": 1_000_000, "symbol": "RELIANCE"}
+    return st.session_state["backtest_result"]
 
 
 def render():
@@ -44,7 +56,7 @@ def render():
 
         method = st.selectbox("Sizing Method", [
             "ATR-Based", "Fixed Fraction (Risk/Reward)", "Kelly Criterion", "Volatility-Based",
-        ])
+        ], key="rs_method")
 
         col_input, col_result = st.columns([1, 1])
 
@@ -53,11 +65,11 @@ def render():
             risk_pct = st.slider("Risk per Trade (%)", 0.1, 5.0, 1.0, 0.1, key="rs_risk")
 
             if method == "ATR-Based":
-                atr_value = st.number_input("ATR Value", 1.0, 500.0, 25.0, step=1.0)
-                atr_mult = st.slider("ATR Multiplier", 0.5, 5.0, 2.0, 0.1)
-                lot_size = st.number_input("Lot Size", 1, 1000, 1)
+                atr_value = st.number_input("ATR Value", 1.0, 500.0, 25.0, step=1.0, key="rs_atr")
+                atr_mult = st.slider("ATR Multiplier", 0.5, 5.0, 2.0, 0.1, key="rs_atr_m")
+                lot_size = st.number_input("Lot Size", 1, 1000, 1, key="rs_lot")
                 max_pos = st.number_input("Max Position Value (₹)", 0, 50_000_000, 0,
-                                          help="0 = no limit")
+                                          help="0 = no limit", key="rs_maxpos")
 
                 shares = atr_position_size(
                     capital, risk_pct, atr_value, atr_mult,
@@ -66,22 +78,22 @@ def render():
                 )
 
             elif method == "Fixed Fraction (Risk/Reward)":
-                entry_price = st.number_input("Entry Price (₹)", 1.0, 100_000.0, 2500.0, step=10.0)
-                stop_loss = st.number_input("Stop Loss (₹)", 1.0, 100_000.0, 2450.0, step=10.0)
+                entry_price = st.number_input("Entry Price (₹)", 1.0, 100_000.0, 2500.0, step=10.0, key="rs_entry")
+                stop_loss = st.number_input("Stop Loss (₹)", 1.0, 100_000.0, 2450.0, step=10.0, key="rs_sl")
                 lot_size = st.number_input("Lot Size", 1, 1000, 1, key="ff_lot")
 
                 shares = fixed_fraction_size(capital, risk_pct, entry_price, stop_loss, lot_size=lot_size)
 
             elif method == "Kelly Criterion":
-                win_rate = st.slider("Win Rate (%)", 10.0, 90.0, 55.0, 1.0) / 100
-                avg_win = st.number_input("Avg Win (₹)", 100.0, 1_000_000.0, 5000.0)
-                avg_loss_val = st.number_input("Avg Loss (₹)", 100.0, 1_000_000.0, 3000.0)
+                win_rate = st.slider("Win Rate (%)", 10.0, 90.0, 55.0, 1.0, key="rs_wr") / 100
+                avg_win = st.number_input("Avg Win (₹)", 100.0, 1_000_000.0, 5000.0, key="rs_aw")
+                avg_loss_val = st.number_input("Avg Loss (₹)", 100.0, 1_000_000.0, 3000.0, key="rs_al")
 
                 kelly = kelly_fraction(win_rate, avg_win, avg_loss_val)
                 shares = int(capital * kelly / 2500)  # Assume ₹2500 stock
 
             else:  # Volatility-Based
-                volatility = st.slider("Annual Volatility (%)", 5.0, 100.0, 25.0, 1.0) / 100
+                volatility = st.slider("Annual Volatility (%)", 5.0, 100.0, 25.0, 1.0, key="rs_vol") / 100
                 price = st.number_input("Stock Price (₹)", 1.0, 100_000.0, 2500.0, step=10.0, key="vb_price")
                 lot_size = st.number_input("Lot Size", 1, 1000, 1, key="vb_lot")
 
@@ -111,10 +123,9 @@ def render():
             )
 
             if method == "ATR-Based":
-                position_val = shares * (capital / 100)  # approximate
                 risk_amount = capital * risk_pct / 100
                 st.markdown(f"**Risk Amount:** ₹{risk_amount:,.0f}")
-                st.markdown(f"**Stop Distance:** ₹{atr_value * atr_mult:.2f} (ATR × multiplier)")
+                st.markdown(f"**Stop Distance:** ₹{atr_value * atr_mult:.2f} (ATR x multiplier)")
 
             elif method == "Fixed Fraction (Risk/Reward)":
                 risk_per_share = abs(entry_price - stop_loss)
@@ -122,7 +133,6 @@ def render():
                 st.markdown(f"**Position Value:** ₹{position_val:,.0f}")
                 st.markdown(f"**Risk per Share:** ₹{risk_per_share:.2f}")
                 st.markdown(f"**Total Risk:** ₹{risk_per_share * shares:,.0f}")
-                rr_ratio = 2.0  # assumed
                 st.markdown(f"**% of Capital:** {position_val/capital*100:.1f}%")
 
             elif method == "Kelly Criterion":
@@ -160,7 +170,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_compare, width='stretch')
+        st.plotly_chart(fig_compare, width='stretch', key="risk_compare_chart")
 
     # ═══════════════════════════════════════════════════════════════════════
     #  Risk Limits Panel
@@ -171,14 +181,14 @@ def render():
         lc1, lc2 = st.columns(2)
         with lc1:
             st.markdown("**Per-Trade Limits**")
-            risk_per_trade = st.slider("Max Risk per Trade (%)", 0.1, 5.0, 0.5, 0.1)
-            max_pos_value = st.number_input("Max Position Value (₹)", 0, 50_000_000, 5_000_000, step=500_000)
+            risk_per_trade = st.slider("Max Risk per Trade (%)", 0.1, 5.0, 0.5, 0.1, key="rl_ptrade")
+            max_pos_value = st.number_input("Max Position Value (₹)", 0, 50_000_000, 5_000_000, step=500_000, key="rl_maxpos")
 
         with lc2:
             st.markdown("**Portfolio Limits**")
-            daily_max = st.slider("Daily Max Loss (%)", 0.5, 10.0, 1.0, 0.5)
-            weekly_max = st.slider("Weekly Max Loss (%)", 1.0, 20.0, 2.0, 0.5)
-            max_dd = st.slider("Max Drawdown Kill Switch (%)", 1.0, 30.0, 5.0, 0.5)
+            daily_max = st.slider("Daily Max Loss (%)", 0.5, 10.0, 1.0, 0.5, key="rl_daily")
+            weekly_max = st.slider("Weekly Max Loss (%)", 1.0, 20.0, 2.0, 0.5, key="rl_weekly")
+            max_dd = st.slider("Max Drawdown Kill Switch (%)", 1.0, 30.0, 5.0, 0.5, key="rl_dd")
 
         risk_config = RiskConfig(
             risk_per_trade_pct=risk_per_trade,
@@ -241,11 +251,10 @@ def render():
     with tab_analysis:
         st.markdown("### 📊 Portfolio Risk Analytics")
 
-        if "backtest_result" in st.session_state:
-            result = st.session_state["backtest_result"]
-        else:
-            df = generate_synthetic_data(n_bars=500, seed=42)
-            result = run_backtest_from_ui(df, "Mean Reversion", {"zscore_entry": 2.0, "zscore_exit": 0.5})
+        result = _ensure_backtest_result()
+        if result is None:
+            st.error("Could not load market data for risk analysis.")
+            return
 
         rets = compute_returns(result.equity_curve)
         dd = compute_drawdown(result.equity_curve)
@@ -274,7 +283,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_var, width='stretch')
+        st.plotly_chart(fig_var, width='stretch', key="risk_var_chart")
 
         # Drawdown underwater chart
         fig_dd = go.Figure()
@@ -292,7 +301,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_dd, width='stretch')
+        st.plotly_chart(fig_dd, width='stretch', key="risk_dd_chart")
 
         # Rolling metrics
         st.markdown("### 📈 Rolling Risk Metrics")
@@ -321,7 +330,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_rolling, width='stretch')
+        st.plotly_chart(fig_rolling, width='stretch', key="risk_rolling_chart")
 
     # ═══════════════════════════════════════════════════════════════════════
     #  Monte Carlo Simulation
@@ -330,19 +339,18 @@ def render():
         st.markdown("### 🎲 Monte Carlo Simulation")
         st.markdown("Reshuffle trade outcomes to estimate outcome distribution.")
 
-        if "backtest_result" in st.session_state:
-            result = st.session_state["backtest_result"]
-        else:
-            df = generate_synthetic_data(n_bars=500, seed=42)
-            result = run_backtest_from_ui(df, "Mean Reversion", {"zscore_entry": 2.0, "zscore_exit": 0.5})
+        result = _ensure_backtest_result()
+        if result is None:
+            st.error("Could not load market data for Monte Carlo simulation.")
+            return
 
         mc1, mc2 = st.columns(2)
         with mc1:
-            n_sims = st.slider("Number of Simulations", 100, 5000, 1000, 100)
+            n_sims = st.slider("Number of Simulations", 100, 5000, 1000, 100, key="mc_sims")
         with mc2:
             mc_seed = st.number_input("Seed", 1, 9999, 42, key="mc_seed")
 
-        if st.button("🎲 Run Monte Carlo", width='stretch'):
+        if st.button("🎲 Run Monte Carlo", width='stretch', key="mc_run"):
             with st.spinner("Running simulations..."):
                 trade_pnls = [t.net_pnl for t in result.trades]
                 if not trade_pnls:
@@ -388,7 +396,7 @@ def render():
                         paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                         font=dict(color=COLORS["text"]),
                     )
-                    st.plotly_chart(fig_mc, width='stretch')
+                    st.plotly_chart(fig_mc, width='stretch', key="mc_paths_chart")
 
                     # Final P&L distribution
                     fig_final = go.Figure()
@@ -403,7 +411,7 @@ def render():
                         paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
                         font=dict(color=COLORS["text"]),
                     )
-                    st.plotly_chart(fig_final, width='stretch')
+                    st.plotly_chart(fig_final, width='stretch', key="mc_dist_chart")
 
                     # Stats
                     mc_s1, mc_s2, mc_s3, mc_s4, mc_s5 = st.columns(5)

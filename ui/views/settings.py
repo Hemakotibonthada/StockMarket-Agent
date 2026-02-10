@@ -11,7 +11,7 @@ if _project_root not in sys.path:
 import streamlit as st
 import pandas as pd
 
-from ui.utils import COLORS
+from ui.utils import COLORS, INDIAN_STOCKS, DEFAULT_WATCHLIST, INDICES
 from src.core.config import (
     AppConfig, CostsConfig, SlippageConfig, RiskConfig,
     TripwireConfig, WalkforwardConfig,
@@ -26,8 +26,9 @@ def render():
         unsafe_allow_html=True,
     )
 
-    tab_theme, tab_general, tab_costs, tab_risk, tab_data, tab_about = st.tabs([
-        "🎨 Theme", "🔧 General", "💰 Costs & Slippage", "🛡️ Risk Defaults", "📁 Data", "ℹ️ About",
+    tab_theme, tab_general, tab_costs, tab_risk, tab_dataprovider, tab_data, tab_about = st.tabs([
+        "🎨 Theme", "🔧 General", "💰 Costs & Slippage", "🛡️ Risk Defaults",
+        "📡 Data Provider", "📁 Data", "ℹ️ About",
     ])
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -233,6 +234,88 @@ def render():
                 "max_drawdown_pct": max_drawdown,
             }
             st.success("Risk settings saved!")
+
+    # ═══════════════════════════════════════════════════════════════════════
+    #  Data Provider Settings
+    # ═══════════════════════════════════════════════════════════════════════
+    with tab_dataprovider:
+        st.markdown("### 📡 Real-Time Data Provider")
+        st.markdown(
+            f'<p style="color: {COLORS["text_muted"]}; margin-top: -10px;">'
+            "Configure live market data source, default symbols, and caching.</p>",
+            unsafe_allow_html=True,
+        )
+
+        dp_c1, dp_c2 = st.columns(2)
+        with dp_c1:
+            st.markdown("**Data Source**")
+            provider = st.selectbox(
+                "Provider",
+                ["yfinance (Free, NSE/BSE via Yahoo Finance)"],
+                key="dp_provider",
+            )
+            st.markdown(
+                f'<p style="color: {COLORS["text_muted"]}; font-size: 0.8rem;">'
+                "yfinance uses Yahoo Finance for free real-time and historical data. "
+                "NSE symbols use .NS suffix, BSE uses .BO suffix (handled automatically).</p>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("**Default Symbol**")
+            dp_symbol_options = sorted(INDIAN_STOCKS.keys())
+            default_sym = st.session_state.get("dp_default_symbol", "RELIANCE")
+            dp_default = st.selectbox(
+                "Default Stock",
+                dp_symbol_options,
+                index=dp_symbol_options.index(default_sym) if default_sym in dp_symbol_options else 0,
+                format_func=lambda s: f"{s} — {INDIAN_STOCKS[s]}",
+                key="dp_default_sym",
+            )
+
+            st.markdown("**Default Period**")
+            dp_period = st.selectbox(
+                "Period",
+                ["3mo", "6mo", "1y", "2y", "5y"],
+                index=2,
+                key="dp_default_period",
+            )
+
+        with dp_c2:
+            st.markdown("**Watchlist**")
+            current_watchlist = st.session_state.get("watchlist", list(DEFAULT_WATCHLIST))
+            watchlist_edit = st.multiselect(
+                "Default Watchlist Symbols",
+                sorted(INDIAN_STOCKS.keys()),
+                default=current_watchlist,
+                format_func=lambda s: f"{s} — {INDIAN_STOCKS[s]}",
+                key="dp_watchlist",
+            )
+
+            st.markdown("**Cache Settings**")
+            cache_ttl = st.slider("Cache TTL (seconds)", 30, 3600, 300, 30,
+                                  help="How long to cache data before refetching",
+                                  key="dp_cache_ttl")
+            st.markdown(
+                f'<p style="color: {COLORS["text_muted"]}; font-size: 0.8rem;">'
+                f"Data will be cached for {cache_ttl}s ({cache_ttl // 60}m {cache_ttl % 60}s) between refreshes.</p>",
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("**Available Indices**")
+            for idx_name, idx_ticker in INDICES.items():
+                st.markdown(f"- **{idx_name}**: `{idx_ticker}`")
+
+        if st.button("💾 Save Data Provider Settings", key="save_dp"):
+            st.session_state["dp_default_symbol"] = dp_default
+            st.session_state["dp_default_period"] = dp_period
+            st.session_state["watchlist"] = watchlist_edit
+            st.session_state["dp_cache_ttl"] = cache_ttl
+            st.success("Data provider settings saved!")
+
+        st.markdown("---")
+        st.markdown("### 📋 Available Stocks")
+        stock_data = [{"Symbol": k, "Name": v} for k, v in sorted(INDIAN_STOCKS.items())]
+        st.dataframe(pd.DataFrame(stock_data), width="stretch", hide_index=True, height=400)
 
     # ═══════════════════════════════════════════════════════════════════════
     #  Data Settings

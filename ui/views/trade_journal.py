@@ -15,9 +15,24 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 from ui.utils import (
-    COLORS, generate_synthetic_data, run_backtest_from_ui,
+    COLORS, load_real_data, run_backtest_from_ui,
     create_trade_scatter, create_cumulative_pnl, trades_to_dataframe,
+    INDIAN_STOCKS,
 )
+
+
+def _ensure_backtest_result():
+    """Ensure a backtest result exists, running one on real data if needed."""
+    if "backtest_result" not in st.session_state:
+        st.info("No backtest results found. Running a backtest on RELIANCE data...")
+        df = load_real_data("RELIANCE", period="1y", interval="1d")
+        if df.empty:
+            st.error("Could not load market data. Please run a backtest from the Backtest Runner page.")
+            return False
+        result = run_backtest_from_ui(df, "Mean Reversion", {"zscore_entry": 2.0, "zscore_exit": 0.5})
+        st.session_state["backtest_result"] = result
+        st.session_state["backtest_config"] = {"strategy": "Mean Reversion", "capital": 1_000_000, "symbol": "RELIANCE"}
+    return True
 
 
 def render():
@@ -28,18 +43,14 @@ def render():
         unsafe_allow_html=True,
     )
 
-    # Check for existing backtest result
-    if "backtest_result" not in st.session_state:
-        st.info("No backtest results found. Running a demo backtest...")
-        df = generate_synthetic_data(n_bars=500, seed=42)
-        result = run_backtest_from_ui(df, "Mean Reversion", {"zscore_entry": 2.0, "zscore_exit": 0.5})
-        st.session_state["backtest_result"] = result
+    if not _ensure_backtest_result():
+        return
 
     result = st.session_state["backtest_result"]
     trades = result.trades
 
     if not trades:
-        st.warning("No trades were generated. Try adjusting strategy parameters.")
+        st.warning("No trades were generated. Try adjusting strategy parameters in the Backtest Runner.")
         return
 
     # Build full trade dataframe
@@ -69,8 +80,6 @@ def render():
     total_pnl = sum(t.net_pnl for t in trades)
     avg_win = np.mean([t.net_pnl for t in winners]) if winners else 0
     avg_loss = np.mean([t.net_pnl for t in losers]) if losers else 0
-    largest_win = max([t.net_pnl for t in trades]) if trades else 0
-    largest_loss = min([t.net_pnl for t in trades]) if trades else 0
 
     k1, k2, k3, k4, k5 = st.columns(5)
     with k1:
@@ -91,12 +100,12 @@ def render():
     with st.expander("🔍 Filters", expanded=False):
         f1, f2, f3 = st.columns(3)
         with f1:
-            side_filter = st.multiselect("Side", ["BUY", "SELL"], default=["BUY", "SELL"])
+            side_filter = st.multiselect("Side", ["BUY", "SELL"], default=["BUY", "SELL"], key="tj_side")
         with f2:
-            outcome_filter = st.multiselect("Outcome", ["✅ Win", "❌ Loss"], default=["✅ Win", "❌ Loss"])
+            outcome_filter = st.multiselect("Outcome", ["✅ Win", "❌ Loss"], default=["✅ Win", "❌ Loss"], key="tj_out")
         with f3:
-            min_pnl = st.number_input("Min Net P&L", value=float(trade_df["Net P&L"].min()), key="min_pnl")
-            max_pnl = st.number_input("Max Net P&L", value=float(trade_df["Net P&L"].max()), key="max_pnl")
+            min_pnl = st.number_input("Min Net P&L", value=float(trade_df["Net P&L"].min()), key="tj_min")
+            max_pnl = st.number_input("Max Net P&L", value=float(trade_df["Net P&L"].max()), key="tj_max")
 
     # Apply filters
     filtered = trade_df[
@@ -125,6 +134,7 @@ def render():
         "trade_journal.csv",
         "text/csv",
         width='content',
+        key="tj_dl",
     )
 
     st.markdown("---")
@@ -138,10 +148,10 @@ def render():
         col_sc, col_cum = st.columns(2)
         with col_sc:
             fig_scatter = create_trade_scatter(trades, "Trade P&L Scatter")
-            st.plotly_chart(fig_scatter, width='stretch')
+            st.plotly_chart(fig_scatter, width='stretch', key="tj_scatter")
         with col_cum:
             fig_cum = create_cumulative_pnl(trades, "Cumulative P&L")
-            st.plotly_chart(fig_cum, width='stretch')
+            st.plotly_chart(fig_cum, width='stretch', key="tj_cum")
 
     with tab_dist:
         # P&L distribution
@@ -159,7 +169,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_hist, width='stretch')
+        st.plotly_chart(fig_hist, width='stretch', key="tj_hist")
 
         # Return % distribution
         fig_ret = go.Figure()
@@ -176,7 +186,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_ret, width='stretch')
+        st.plotly_chart(fig_ret, width='stretch', key="tj_ret_hist")
 
     with tab_streak:
         # Win/Loss streak analysis
@@ -209,7 +219,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_streak, width='stretch')
+        st.plotly_chart(fig_streak, width='stretch', key="tj_streak")
 
         # Streak stats
         s1, s2, s3 = st.columns(3)
@@ -243,7 +253,7 @@ def render():
             paper_bgcolor=COLORS["bg_dark"], plot_bgcolor=COLORS["bg_dark"],
             font=dict(color=COLORS["text"]),
         )
-        st.plotly_chart(fig_hold, width='stretch')
+        st.plotly_chart(fig_hold, width='stretch', key="tj_hold")
 
         # Win % by side
         side_stats = trade_df.groupby("Side").agg(

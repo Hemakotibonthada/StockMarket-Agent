@@ -129,6 +129,24 @@ STRATEGY_MAP = {
 }
 
 
+from src.data.market_data import (
+    fetch_stock_data,
+    fetch_stock_data_daterange,
+    fetch_multiple_stocks,
+    fetch_live_quote,
+    fetch_watchlist_quotes,
+    fetch_index_data,
+    get_stock_info,
+    search_stocks,
+    get_available_symbols,
+    get_default_watchlist,
+    validate_data,
+    INDIAN_STOCKS,
+    DEFAULT_WATCHLIST,
+    INDICES,
+)
+
+
 def generate_synthetic_data(
     symbol: str = "RELIANCE",
     n_bars: int = 500,
@@ -138,7 +156,7 @@ def generate_synthetic_data(
     trend: float = 0.0003,
     volatility: float = 0.015,
 ) -> pd.DataFrame:
-    """Generate realistic synthetic OHLCV data."""
+    """Generate realistic synthetic OHLCV data (used only as fallback)."""
     rng = np.random.default_rng(seed)
     dates = pd.bdate_range(start_date, periods=n_bars, freq="D")
 
@@ -161,8 +179,22 @@ def generate_synthetic_data(
     return df
 
 
+def load_real_data(
+    symbol: str = "RELIANCE",
+    period: str = "2y",
+    interval: str = "1d",
+) -> pd.DataFrame:
+    """Load real market data for a symbol, with synthetic fallback."""
+    import streamlit as st
+    df = fetch_stock_data(symbol, period=period, interval=interval)
+    if df.empty:
+        st.warning(f"Could not fetch live data for {symbol}. Using cached/sample data.")
+        df = load_sample_data(symbol)
+    return df
+
+
 def load_sample_data(symbol: str = "RELIANCE") -> pd.DataFrame:
-    """Load sample CSV data or generate synthetic data."""
+    """Load sample CSV data or generate synthetic data as last resort."""
     from pathlib import Path
     sample_dir = Path("data/sample")
 
@@ -183,7 +215,7 @@ def generate_multi_symbol_data(
     n_bars: int = 500,
     seed: int = 42,
 ) -> dict[str, pd.DataFrame]:
-    """Generate synthetic data for multiple symbols."""
+    """Generate synthetic data for multiple symbols (fallback only)."""
     if symbols is None:
         symbols = ["RELIANCE", "TCS", "INFY", "HDFC", "ICICIBANK"]
 
